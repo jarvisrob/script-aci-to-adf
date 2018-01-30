@@ -7,11 +7,14 @@ Param(
     [string] $StorageAccountName,
     [SecureString] $StorageAccountKey,
     [string] $FileShareName,
-    [string] $BlobContainerName
+    [string] $BlobContainerName,
+    [string] $DataFactoryResourceGroup,
+    [string] $DataFactoryName,
+    [string] $PipelineName
 )
 
 
-# ./Invoke-ContainerToAdfLocal.ps1 -ContainerImage jarvisrob/scrapereiv -ContainerResourceGroup rob-real-estate-test -ContainerName scrapereiv -ContainerVolumeMountPath /out -StorageAccountResourceGroup rob-re-store -StorageAccountName robrestore -StorageAccountKey $secpass -FileShareName scrape -BlobContainerName adf-test-blob
+# ./Invoke-ContainerToAdfLocal.ps1 -ContainerImage jarvisrob/scrapereiv -ContainerResourceGroup rob-real-estate-test -ContainerName scrapereiv -ContainerVolumeMountPath /out -StorageAccountResourceGroup rob-re-store -StorageAccountName robrestore -StorageAccountKey $secpass -FileShareName scrape -BlobContainerName adf-test-blob -DataFactoryResourceGroup rob-re-adf -DataFactoryName readftest -PipelineName CopyPipeline-RealEstate
 
 # Connection to Azure account
 # Login-AzureRmAccount
@@ -54,7 +57,17 @@ While (-NOT ($BlobCopyState.Status -eq "Success")) {
 Write-Output "Copy complete"
 
 # Invoke the Data Factory pipeline
-Write-Output "Invoking the ADF pipeline. Once invoked, this script is complete."
-#Invoke-AzureRmDataFactoryV2Pipeline
+Write-Output "Invoking the Data Factory pipeline"
+$PipelineRunId = Invoke-AzureRmDataFactoryV2Pipeline -ResourceGroupName $DataFactoryResourceGroup -DataFactoryName $DataFactoryName -PipelineName $PipelineName
 
-Write-Output "Completed"
+# Poll and monitor the pipeline run until succeeded
+$PipelineRunInfo = Get-AzureRmDataFactoryV2PipelineRun -ResourceGroupName $DataFactoryResourceGroup -DataFactoryName $DataFactoryName -PipelineRunId $PipelineRunId
+While (-NOT ($PipelineRunInfo.Status -eq "Succeeded")) {
+    Write-Output "Waiting ... Pipeline status: $($PipelineRunInfo.Status)"
+    Start-Sleep -Seconds 10
+    $PipelineRunInfo = Get-AzureRmDataFactoryV2PipelineRun -ResourceGroupName $DataFactoryResourceGroup -DataFactoryName $DataFactoryName -PipelineRunId $PipelineRunId
+}
+Write-Output "Pipline run complete"
+
+
+Write-Output "Script completed"
