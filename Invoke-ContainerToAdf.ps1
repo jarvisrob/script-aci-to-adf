@@ -14,7 +14,7 @@ Param(
 )
 
 
-# ./Invoke-ContainerToAdfLocal.ps1 -ContainerImage jarvisrob/scrapereiv -ContainerResourceGroup rob-real-estate-test -ContainerName scrapereiv -ContainerVolumeMountPath /out -StorageAccountResourceGroup rob-re-store -StorageAccountName robrestore -StorageAccountKey $secpass -FileShareName scrape -BlobContainerName adf-test-blob -DataFactoryResourceGroup rob-re-adf -DataFactoryName readftest -PipelineName CopyPipeline-RealEstate
+# ./Invoke-ContainerToAdfLocal.ps1 -ContainerImage jarvisrob/scrapereiv -ContainerResourceGroup rob-real-estate-test -ContainerName scrapereiv -ContainerVolumeMountPath /out -StorageAccountResourceGroup rob-re-store -StorageAccountName robrestore -StorageAccountKey $StorageAccountKey -FileShareName scrape -BlobContainerName adf-test-blob -DataFactoryResourceGroup rob-re-adf -DataFactoryName readftest -PipelineName CopyPipeline-RealEstate
 
 # Connection to Azure account
 # Login-AzureRmAccount
