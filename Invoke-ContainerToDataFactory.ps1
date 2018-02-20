@@ -49,7 +49,7 @@ Write-Output "Copying file(s) to staging blob ..."
 Set-AzureRmCurrentStorageAccount -ResourceGroupName $StorageAccountResourceGroup -Name  $StorageAccountName
 Start-AzureStorageBlobCopy -SrcShareName $FileShareName -SrcFilePath "/$OutFileName" -DestContainer $BlobContainerName
 $BlobCopyState = Get-AzureStorageBlobCopyState -Blob $OutFileName -Container $BlobContainerName
-While (-NOT ($BlobCopyState.Status -eq "Success")) {
+While (-not (($BlobCopyState.Status -eq "Success") -or ($BlobCopyState.Status -eq "Failed"))) {
     Write-Output "Waiting ... Blob copy status: $($BlobCopyState.Status)"
     Start-Sleep -Seconds 2
     $BlobCopyState = Get-AzureStorageBlobCopyState -Blob $OutFileName -Container $BlobContainerName
@@ -62,7 +62,7 @@ $PipelineRunId = Invoke-AzureRmDataFactoryV2Pipeline -ResourceGroupName $DataFac
 
 # Poll and monitor the pipeline run until succeeded
 $PipelineRunInfo = Get-AzureRmDataFactoryV2PipelineRun -ResourceGroupName $DataFactoryResourceGroup -DataFactoryName $DataFactoryName -PipelineRunId $PipelineRunId
-While (-NOT ($PipelineRunInfo.Status -eq "Succeeded")) {
+While (-not (($PipelineRunInfo.Status -eq "Succeeded") -or ($PipelineRunInfo.Status -eq "Failed"))) {
     Write-Output "Waiting ... Pipeline status: $($PipelineRunInfo.Status)"
     Start-Sleep -Seconds 10
     $PipelineRunInfo = Get-AzureRmDataFactoryV2PipelineRun -ResourceGroupName $DataFactoryResourceGroup -DataFactoryName $DataFactoryName -PipelineRunId $PipelineRunId
