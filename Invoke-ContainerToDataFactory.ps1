@@ -34,7 +34,7 @@ New-AzureRmContainerGroup -ResourceGroupName $ContainerResourceGroup -Name $Cont
 
 # Poll the container, waiting for it to finish running, and kill once finished
 $ContainerInfo = Get-AzureRmContainerGroup -ResourceGroupName $ContainerResourceGroup -Name $ContainerName
-While (-NOT ($ContainerInfo.State -eq "Succeeded")) {
+While (-not (($ContainerInfo.State -eq "Succeeded") -or ($ContainerInfo.State -eq "Failed"))) {
     Write-Output "Waiting ... Container state: $($ContainerInfo.State)"
     Start-Sleep -Seconds 10
     $ContainerInfo = Get-AzureRmContainerGroup -ResourceGroupName $ContainerResourceGroup -Name $ContainerName
