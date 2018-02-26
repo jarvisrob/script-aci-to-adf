@@ -17,14 +17,14 @@ Param(
 $y = Get-Date -UFormat %Y
 $m = Get-Date -UFormat %m
 $d = Get-Date -UFormat %d
-$OutFileName = "scrape_$y-$m-$d.csv"
+$OutFileName = "re-vic_$y-$m-$d.csv"
 
 # Create storage credential
 $StorageAccountCredential = New-Object System.Management.Automation.PSCredential ($StorageAccountName, $StorageAccountKey)
 
 # Spin-up the container
 Write-Output "Spinning up container"
-New-AzureRmContainerGroup -ResourceGroupName $ContainerResourceGroup -Name $ContainerName -Image $ContainerImage -RestartPolicy Never -AzureFileVolumeShareName $FileShareName -AzureFileVolumeAccountCredential $StorageAccountCredential -AzureFileVolumeMountPath $ContainerVolumeMountPath -Command "python /app/scrapereiv.py $OutFileName"
+New-AzureRmContainerGroup -ResourceGroupName $ContainerResourceGroup -Name $ContainerName -Image $ContainerImage -RestartPolicy Never -AzureFileVolumeShareName $FileShareName -AzureFileVolumeAccountCredential $StorageAccountCredential -AzureFileVolumeMountPath $ContainerVolumeMountPath -Command "python /app/scrape_reiv.py $OutFileName"
 
 # Poll the container, waiting for it to finish running, and kill once finished
 $ContainerInfo = Get-AzureRmContainerGroup -ResourceGroupName $ContainerResourceGroup -Name $ContainerName
@@ -40,6 +40,7 @@ If ($ContainerInfo.State -eq "Succeeded") {
     Remove-AzureRmContainerGroup -ResourceGroupName $ContainerResourceGroup -Name $ContainerName
 } Else {
     Write-Output "ERROR: Container failed. Exiting script."
+    $ContainerInfo
     Exit
 }
 
@@ -57,6 +58,7 @@ If ($BlobCopyState.Status -eq "Success") {
     Write-Output "Copy complete"
 } Else {
     Write-Output "ERROR: Copy failed. Exiting script."
+    $BlobCopyState
     Exit
 }
 
@@ -75,6 +77,7 @@ If ($PipelineRunInfo.Status -eq "Succeeded") {
     Write-Output "Pipline run complete"
 } Else {
     Write-Output "ERROR: Pipeline run failed. Exiting script."
+    $PipelineRunInfo
     Exit
 }
 
