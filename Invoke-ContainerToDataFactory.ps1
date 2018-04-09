@@ -1,15 +1,40 @@
+
+[CmdletBinding()]
 Param(
+    [Parameter(Mandatory=$True)]
     [string] $ContainerImage,
+
+    [Parameter(Mandatory=$True)]
     [string] $ContainerResourceGroup,
+
+    [Parameter(Mandatory=$True)]
     [string] $ContainerName,
+
+    [Parameter(Mandatory=$True)]
     [string] $ContainerVolumeMountPath,
+    
+    [Parameter(Mandatory=$True)]
     [string] $StorageAccountResourceGroup,
+
+    [Parameter(Mandatory=$True)]
     [string] $StorageAccountName,
+
+    [Parameter(Mandatory=$True)]
     [SecureString] $StorageAccountKey,
+
+    [Parameter(Mandatory=$True)]
     [string] $FileShareName,
+
+    [Parameter(Mandatory=$True)]
     [string] $BlobContainerName,
+
+    [Parameter(Mandatory=$True)]
     [string] $DataFactoryResourceGroup,
+
+    [Parameter(Mandatory=$True)]
     [string] $DataFactoryName,
+
+    [Parameter(Mandatory=$True)]
     [string] $PipelineName
 )
 
