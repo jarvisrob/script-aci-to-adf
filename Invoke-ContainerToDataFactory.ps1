@@ -1,6 +1,8 @@
 
 [CmdletBinding()]
 Param(
+    [switch] $AsRunbook,
+
     [Parameter(Mandatory=$True)]
     [string] $ContainerImage,
 
@@ -16,11 +18,11 @@ Param(
     [Parameter(Mandatory=$True)]
     [string] $StorageAccountResourceGroup,
 
-    [Parameter(Mandatory=$True)]
     [string] $StorageAccountName,
 
-    [Parameter(Mandatory=$True)]
     [SecureString] $StorageAccountKey,
+
+    [string] $StorageCredentialName,
 
     [Parameter(Mandatory=$True)]
     [string] $FileShareName,
@@ -38,14 +40,46 @@ Param(
     [string] $PipelineName
 )
 
+
 # Naming the file produced
 $y = Get-Date -UFormat %Y
 $m = Get-Date -UFormat %m
 $d = Get-Date -UFormat %d
-$OutFileName = "re-vic_$y-$m-$d.csv"
+$OutFileName = "reiv_$y-$m-$d.csv"
 
-# Create storage credential
-$StorageAccountCredential = New-Object System.Management.Automation.PSCredential ($StorageAccountName, $StorageAccountKey)
+
+If ($AsRunbook) {
+
+    $connectionName = "AzureRunAsConnection"
+    try
+    {
+        # Get the connection "AzureRunAsConnection"
+        $servicePrincipalConnection = Get-AutomationConnection -Name $connectionName
+
+        "Logging in to Azure..."
+        Add-AzureRmAccount `
+            -ServicePrincipal `
+            -TenantId $servicePrincipalConnection.TenantId `
+            -ApplicationId $servicePrincipalConnection.ApplicationId `
+            -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint
+    }
+    catch {
+        if (!$servicePrincipalConnection)
+        {
+            $ErrorMessage = "Connection $connectionName not found."
+            throw $ErrorMessage
+        } else{
+            Write-Error -Message $_.Exception
+            throw $_.Exception
+        }
+    }
+
+    $StorageAccountCredential = Get-AutomationPSCredential -Name $StorageCredentialName
+
+} Else {
+    $StorageAccountCredential = New-Object System.Management.Automation.PSCredential ($StorageAccountName, $StorageAccountKey)
+}
+
 
 # Spin-up the container
 Write-Output "Spinning up container"
@@ -71,7 +105,7 @@ If ($ContainerInfo.State -eq "Succeeded") {
 
 # Copy file(s) from file storage to blob
 Write-Output "Copying file(s) to staging blob"
-Set-AzureRmCurrentStorageAccount -ResourceGroupName $StorageAccountResourceGroup -Name  $StorageAccountName
+Set-AzureRmCurrentStorageAccount -ResourceGroupName $StorageAccountResourceGroup -Name  $StorageAccountCredential.UserName
 Start-AzureStorageBlobCopy -SrcShareName $FileShareName -SrcFilePath "/$OutFileName" -DestContainer $BlobContainerName
 $BlobCopyState = Get-AzureStorageBlobCopyState -Blob $OutFileName -Container $BlobContainerName
 While (-not (($BlobCopyState.Status -eq "Success") -or ($BlobCopyState.Status -eq "Failed"))) {
